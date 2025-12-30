@@ -1,0 +1,27 @@
+2025-12-29 19:02:49,851 - ImageReader - WARNING - Image /Users/leuyentran/Documents/ML_Assign/data/words/r06/r06-022/r06-022-03-05.png could not be read, returning None.
+2025-12-29 19:02:49,851 - DataProvider - WARNING - Data or annotation is None, marking for removal on epoch end.
+2025-12-29 19:02:49,851 - DataProvider - WARNING - Data or annotation is None, skipping.
+2025-12-29 19:09:06,384 - ImageReader - WARNING - Image /Users/leuyentran/Documents/ML_Assign/data/words/a01/a01-117/a01-117-05-02.png could not be read, returning None.
+2025-12-29 19:09:06,384 - DataProvider - WARNING - Data or annotation is None, marking for removal on epoch end.
+2025-12-29 19:09:06,384 - DataProvider - WARNING - Data or annotation is None, skipping.
+2025-12-29 19:16:59,266 - DataProvider - WARNING - Removing ['/Users/leuyentran/Documents/ML_Assign/data/words/r06/r06-022/r06-022-03-05.png', 'more'] from dataset.
+2025-12-29 19:16:59,277 - DataProvider - WARNING - Removing ['/Users/leuyentran/Documents/ML_Assign/data/words/a01/a01-117/a01-117-05-02.png', 'Powell'] from dataset.
+2025-12-29 19:17:26,698 - absl - WARNING - You are saving your model as an HDF5 file via `model.save()` or `keras.saving.save_model(model)`. This file format is considered legacy. We recommend using instead the native Keras format, e.g. `model.save('my_model.keras')` or `keras.saving.save_model(model, 'my_model.keras')`. 
+2025-12-29 19:17:26,940 - root - INFO - Epoch 0; CER: 0.8195823431015015; WER: 0.9134411811828613; loss: 12.571022987365723; val_CER: 0.8048221468925476; val_WER: 0.9067845940589905; val_loss: 11.346708297729492
+2025-12-29 19:40:51,770 - absl - WARNING - You are saving your model as an HDF5 file via `model.save()` or `keras.saving.save_model(model)`. This file format is considered legacy. We recommend using instead the native Keras format, e.g. `model.save('my_model.keras')` or `keras.saving.save_model(model, 'my_model.keras')`. 
+2025-12-29 19:40:51,985 - root - INFO - Epoch 1; CER: 0.6889021992683411; WER: 0.8431535363197327; loss: 9.134329795837402; val_CER: 0.6765030026435852; val_WER: 0.8364971876144409; val_loss: 7.060422420501709
+2025-12-29 20:04:18,491 - absl - WARNING - You are saving your model as an HDF5 file via `model.save()` or `keras.saving.save_model(model)`. This file format is considered legacy. We recommend using instead the native Keras format, e.g. `model.save('my_model.keras')` or `keras.saving.save_model(model, 'my_model.keras')`. 
+2025-12-29 20:04:18,701 - root - INFO - Epoch 2; CER: 0.602243959903717; WER: 0.7937121987342834; loss: 7.191400051116943; val_CER: 0.5938447713851929; val_WER: 0.7888838052749634; val_loss: 5.609554767608643
+2025-12-29 20:27:37,909 - absl - WARNING - You are saving your model as an HDF5 file via `model.save()` or `keras.saving.save_model(model)`. This file format is considered legacy. We recommend using instead the native Keras format, e.g. `model.save('my_model.keras')` or `keras.saving.save_model(model, 'my_model.keras')`. 
+2025-12-29 20:27:38,121 - root - INFO - Epoch 3; CER: 0.5378627181053162; WER: 0.7528378367424011; loss: 5.876102447509766; val_CER: 0.5304638743400574; val_WER: 0.7471826076507568; val_loss: 4.12346076965332
+2025-12-29 20:50:37,370 - absl - WARNING - You are saving your model as an HDF5 file via `model.save()` or `keras.saving.save_model(model)`. This file format is considered legacy. We recommend using instead the native Keras format, e.g. `model.save('my_model.keras')` or `keras.saving.save_model(model, 'my_model.keras')`. 
+2025-12-29 20:50:37,583 - root - INFO - Epoch 4; CER: 0.48824530839920044; WER: 0.7174117565155029; loss: 5.0419602394104; val_CER: 0.4892229735851288; val_WER: 0.7188898324966431; val_loss: 9.796075820922852
+2025-12-29 20:50:41,808 - tf2onnx.tfonnx - INFO - Using tensorflow=2.16.2, onnx=1.17.0, tf2onnx=1.16.1/15c810
+2025-12-29 20:50:41,809 - tf2onnx.tfonnx - INFO - Using opset <onnx, 15>
+2025-12-29 20:50:42,072 - tf2onnx.tf_utils - INFO - Computed 0 values for constant folding
+2025-12-29 20:50:42,079 - tf2onnx.tf_utils - INFO - Computed 0 values for constant folding
+2025-12-29 20:50:42,088 - tf2onnx.tf_utils - INFO - Computed 0 values for constant folding
+2025-12-29 20:50:42,107 - tf2onnx.tf_utils - INFO - Computed 0 values for constant folding
+2025-12-29 20:50:42,169 - tf2onnx.tf_utils - INFO - Computed 0 values for constant folding
+2025-12-29 20:50:42,555 - tf2onnx.optimizer - INFO - Optimizing ONNX model
+2025-12-29 20:50:43,973 - tf2onnx.optimizer - INFO - After optimization: Cast -4 (8->4), Concat -4 (8->4), Const -51 (146->95), Expand -3 (4->1), Gather +1 (0->1), Identity -2 (2->0), Shape -1 (3->2), Slice -1 (5->4), Squeeze -3 (5->2), Transpose -45 (49->4), Unsqueeze -14 (15->1)

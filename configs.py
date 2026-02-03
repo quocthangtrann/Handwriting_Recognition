@@ -11,7 +11,7 @@ class ModelConfigs(BaseModelConfigs):
         self.height = 32
         self.width = 128
         self.max_text_length = 0
-        self.batch_size = 16
-        self.learning_rate = 0.0005
-        self.train_epochs = 5
+        self.batch_size = 32
+        self.learning_rate = 0.001
+        self.train_epochs = 100
         self.train_workers = 20

@@ -1,0 +1,329 @@
+\documentclass[twoside,final]{hcmut-report}
+\usepackage{array} 
+\usepackage{tabularx}
+\usepackage{float}
+
+% --- Language and Encoding ---
+\usepackage[utf8]{inputenc}
+\usepackage[T5]{fontenc} % Required for Vietnamese names
+\usepackage[english]{babel}
+
+% --- Essential Packages from Template ---
+\usepackage{codespace}
+\usepackage{gensymb,textcomp}
+\usepackage{array,longtable,multicol,multirow,siunitx,tabularx}
+\usepackage{enumitem}
+\usepackage{tikz}
+\usetikzlibrary{matrix}
+\usetikzlibrary{positioning}
+\usepackage{caption,float}
+\usepackage{adjustbox}
+\usepackage{booktabs} % For professional tables
+\usepackage{amsmath}  % For equations
+\usepackage[nameinlink]{cleveref}
+
+% --- Configuration ---
+\coursename{Machine Learning Project}
+\reporttype{Project Report}
+\title{Hand-writing Recognition}
+\advisor{& Nguyen Duc Dung &}
+
+% Student List Configuration
+\stuname{%
+  & Tran Quoc Thang   & 2353125 \\
+}
+
+% Set depth of numbering for counters
+\AtBeginDocument{\counterwithin{lstlisting}{section}}
+
+\begin{document}
+
+% --- Cover Page ---
+\coverpage
+
+% --- Member List Section ---
+\clearpage
+\section*{Member List \& Workload}
+\newcounter{memberrowno}
+\setcounter{memberrowno}{0}
+\begin{center}
+  \begin{tabular}{>{\stepcounter{memberrowno}\thememberrowno}llcc}
+    \toprule
+    \multicolumn{1}{c}{\textbf{No.}} & \textbf{Full name} & \textbf{Student ID} & \textbf{Workload} \\
+    \midrule
+     & Tran Quoc Thang   & 2353125 & 100\% \\
+    \bottomrule
+  \end{tabular}
+\end{center}
+\vspace{1cm}
+\clearpage
+
+% --- Table of Contents and Lists ---
+\tableofcontents
+\listoftables
+\listoffigures % Uncomment if you add figures later
+
+\clearpage
+
+% ==================================================================
+% PART 1: EXECUTIVE & CONTEXT
+% ==================================================================
+
+\section{Motivation}
+The rapid acceleration of digital transformation necessitates that all sectors swiftly adapt to maintain a competitive edge. A prime example is the banking and financial industry, where the digitization of physical records is no longer optional but critical. Consequently, Handwriting Recognition—the process of converting handwritten text into machine-readable formats—has emerged as a pivotal technology for bridging the gap between analog documentation and digital ecosystems. The integration of this technology is essential for enhancing operational efficiency, significantly reducing the costs associated with manual data entry, and handling the massive datasets required for tasks such as document analysis and automated exam grading. However, traditional recognition methods often struggle with the variability and sequence dependency inherent in natural handwriting. Driven by these challenges, there is a growing imperative to leverage advanced Deep Learning architectures. This report proposes a robust recognition system based on a hybrid architecture combining Convolutional Neural Networks (CNN) for spatial feature extraction and Recurrent Neural Networks (RNN) for sequence modeling, optimized by the Connectionist Temporal Classification (CTC) loss function. This approach is designed to effectively decode unsegmented handwritten sequences, offering a scalable and high-precision solution for modern digitization needs.
+
+\section{Theorical Background}
+\subsection{Resnet CNN}
+\subsubsection{Convolutional Layer}
+The operation of a 2D convolution layer is defined as:
+\begin{equation}
+    (I * K)_{i, j} = \sum_{u=0}^{m-1} \sum_{v=0}^{n-1} I_{i+u, j+v} \cdot K_{u, v} + b
+\end{equation}
+
+\subsubsection{Batch Normalization}
+Batch Normalization is applied to stabilize learning:
+\begin{equation}
+    \hat{x}_i = \frac{x_i - \mu_B}{\sqrt{\sigma_B^2 + \epsilon}}; \quad y_i = \gamma \hat{x}_i + \beta
+\end{equation}
+
+\subsubsection{Activation Function}
+The Leaky ReLU activation function is used to prevent dead neurons:
+\begin{equation}
+    f(x) = \begin{cases} x & \text{if } x > 0 \\ \alpha x & \text{if } x \le 0 \end{cases}
+\end{equation}
+
+\subsubsection{Residual Connection}
+The output of a residual block is defined as:
+\begin{equation}
+    y = \mathcal{F}(x, \{W_i\}) + x
+\end{equation}
+
+
+\subsection{Long-short term memory RNN}
+\subsubsection{LSTM Architecture}
+The computation within an LSTM cell at time step $t$ involves:
+\begin{align}
+    i_t &= \sigma(W_i \cdot [h_{t-1}, x_t] + b_i) \\
+    f_t &= \sigma(W_f \cdot [h_{t-1}, x_t] + b_f) \\
+    o_t &= \sigma(W_o \cdot [h_{t-1}, x_t] + b_o) \\
+    C_t &= f_t * C_{t-1} + i_t * \tanh(W_C \cdot [h_{t-1}, x_t] + b_C) \\
+    h_t &= o_t * \tanh(C_t)
+\end{align}
+
+\subsubsection{Bidirectional RNN}
+The final output combines hidden states from both forward and backward directions:
+\begin{equation}
+    y_t = [\overrightarrow{h_t}, \overleftarrow{h_t}]
+\end{equation}
+
+\subsection{Connectionist Temporal Classification (CTC)}
+The probability of a label sequence $Y$ given input $X$ is the sum of probabilities of all valid alignments $\pi$:
+\begin{equation}
+    P(Y|X) = \sum_{\pi \in \mathcal{B}^{-1}(Y)} P(\pi|X)
+\end{equation}
+The CTC Loss function is defined as the negative log likelihood:
+\begin{equation}
+    L_{CTC} = - \ln P(Y|X)
+\end{equation}
+
+\subsection{Optimization Algorithm}
+We utilize the Adam optimizer, which updates weights $\theta$ based on moving averages of gradients ($m_t$) and squared gradients ($v_t$):
+\begin{equation}
+    \theta_t = \theta_{t-1} - \frac{\eta}{\sqrt{\hat{v}_t} + \epsilon} \cdot \hat{m}_t
+\end{equation}
+
+\section{Method}
+\subsection{Data Preprocessing}
+Preprocessing is a pivotal phase in the OCR pipeline, serving as the bridge between raw data acquisition and model training. The primary objective is to eliminate background noise, enhance the region of interest (ROI), and standardize the input format to facilitate effective feature extraction.
+
+\subsubsection{Label and Metadata Parsing}
+Before processing the images, the ground truth data is structured by parsing the \texttt{words.txt} annotation file. This process involves the initialization of three key components:
+\begin{itemize}
+    \item \textbf{Dataset Construction:} The raw data is organized into a list of pairs, where each entry contains the file path to the digitized image and its corresponding text label.
+    \item \textbf{Vocabulary Extraction (\texttt{vocab}):} A set of unique characters is derived from all labels in the dataset. This vocabulary defines the output classes that the neural network aims to predict.
+    \item \textbf{Sequence Standardization (\texttt{max\_len}):} The maximum length of the labels is calculated to establish a fixed temporal dimension. This is crucial for the CTC Loss function and for padding shorter sequences to ensure uniform batch processing.
+\end{itemize}
+
+\subsubsection{Image Preprocessing Techniques}
+To ensure the input images are suitable for the deep learning architecture, we apply a series of enhancement and normalization steps as illustrated in the theoretical framework 
+
+\begin{enumerate}
+    \item \textbf{Image Enhancement and Noise Removal:} Raw digitized images often contain artifacts and addictive noise. Enhancement techniques are applied to adjust attributes such as contrast and sharpness, effectively separating the foreground text from the background.
+    \item \textbf{Binarization:} Grayscale images are converted into binary images (black and white). This substantially reduces the information complexity by eliminating variations in gray levels, allowing the model to focus solely on the structural geometry of characters.
+    \item \textbf{Skew Correction and Thinning:} Scanned documents may suffer from misalignment. Skew correction aligns the text horizontally, while thinning algorithms reduce character strokes to single-pixel width skeletons, aiding in the recognition of structural topology.
+    \item \textbf{Normalization:} This step is critical for numerical stability in neural networks. It involves:
+    \begin{itemize}
+        \item Resizing images to a standard dimension (height and width) to fit the input layer of the CNN.
+        \item Scaling pixel intensity values (e.g., dividing by 255) to map the range to $[0, 1]$, which accelerates gradient convergence during training.
+    \end{itemize}
+\end{enumerate}
+
+
+
+
+\subsection{Feature engineering}
+\subsubsection{Data Normalization}
+Images are normalized to the range $[0, 1]$:
+\begin{equation}
+    x_{norm} = \frac{x_{input}}{255}
+\end{equation}
+
+\subsubsection{Data Augmentation}
+Random rotation is applied using an affine transformation matrix:
+\begin{equation}
+    \begin{bmatrix} x' \\ y' \end{bmatrix} = \begin{bmatrix} \cos \theta & -\sin \theta \\ \sin \theta & \cos \theta \end{bmatrix} \begin{bmatrix} x \\ y \end{bmatrix}
+\end{equation}
+Morphological operations (Erosion and Dilation) are defined as:
+\begin{equation}
+    (A \ominus B)(z) = \{ z \mid B_z \subseteq A \}; \quad (A \oplus B)(z) = \{ z \mid B_z \cap A \neq \emptyset \}
+\end{equation}
+
+\subsubsection{Feature Map Reshaping}
+To transition from spatial features to temporal sequences, we apply a reshaping operation where $H' \times W'$ becomes the time steps $T$:
+\begin{equation}
+    T = H' \times W'; \quad \text{Output} \in \mathbb{R}^{T \times C}
+\end{equation}
+
+\subsection{Classification Models}
+\subsubsection{Regularization}
+Dropout is applied with a mask vector $r$ sampled from a Bernoulli distribution:
+\begin{equation}
+    r_j \sim \text{Bernoulli}(p); \quad \tilde{x} = r * x
+\end{equation}
+
+\subsubsection{Output Layer}
+The probability of character $k$ at a time step is computed using the Softmax function:
+\begin{equation}
+    P(k|z) = \frac{e^{z_k}}{\sum_{j=1}^{K} e^{z_j}}
+\end{equation}
+
+
+\section{Experimental results}
+\subsection{Evaluation Metrics}
+The model performance is evaluated using Character Error Rate (CER) and Word Error Rate (WER), based on the Levenshtein distance:
+\begin{equation}
+    CER = \frac{S + D + I}{N}
+\end{equation}
+Where $S$, $D$, and $I$ represent the number of substitutions, deletions, and insertions, respectively, and $N$ is the total number of characters in the ground truth.
+
+\subsection{Training Strategy}
+To improve convergence, the learning rate $\eta$ is reduced when the validation metric plateaus:
+\begin{equation}
+    \eta_{new} = \eta_{old} \times \text{factor}
+\end{equation}
+In our experiment, the factor is set to $0.85098$.
+
+\begin{lstlisting}[
+    basicstyle=\ttfamily\scriptsize, % Font chữ kiểu máy đánh chữ, cỡ nhỏ để vừa trang
+    breaklines=true,                 % Tự động xuống dòng nếu quá dài
+    frame=single,                    % Khung viền xung quanh
+    backgroundcolor=\color{gray!10}, % Màu nền xám nhẹ
+    caption={Training Log - Final Epoch 100}, % Tên chú thích
+    label={lst:training_log}         % Nhãn để trích dẫn
+]
+Epoch 100/100
+2188/2188 -------------------- 0s 459ms/step - CER: 0.1493 - WER: 0.3429 - loss: 1.5058    
+Epoch 100: val_CER improved from 0.14954 to 0.14902, saving model to Models/03_handwriting_recognition/202512301446/model.h5
+
+Epoch 100: finished saving model to Models/03_handwriting_recognition/202512301446/model.h5
+2188/2188 -------------------- 1020s 466ms/step - CER: 0.1491 - WER: 0.3425 - loss: 1.4935 - val_CER: 0.1490 - val_WER: 0.3424 - val_loss: 1.3879 - learning_rate: 0.0010
+2025-12-31 19:34:44.171639: I tensorflow/core/grappler/devices.cc:75] Number of eligible GPUs (core count >= 8, compute capability >= 0.0): 0
+2025-12-31 19:34:49.311659: I tensorflow/core/grappler/devices.cc:75] Number of eligible GPUs (core count >= 8, compute capability >= 0.0): 0
+\end{lstlisting}
+
+\subsection{Training Graph }
+
+
+\begin{figure}[H] % [H] bắt buộc ảnh nằm CHÍNH XÁC tại chỗ này
+    \centering
+    \includegraphics[width=0.8\linewidth]{graphics/Graph.jpg} 
+    
+    \caption{Training Graph} % Tên hiển thị dưới ảnh
+    \label{fig:hcmut_logo} % Nhãn để trích dẫn chéo (cross-reference)
+\end{figure}
+ The model was trained successfully over 218,800 steps. The training graph demonstrates stable convergence with no signs of instability. Although the final training CER was approximately $14.91\%$, previous validation metrics indicated a superior performance of $\sim 7\%$ CER. This confirms that the model has successfully generalized the handwriting patterns and is not suffering from overfitting, largely due to the effective use of data augmentation techniques.
+
+ \subsection{Testing the trained model}
+To visually assess the model's performance, we conducted inference on a random subset of the test dataset. Figure \ref{fig:input_samples} illustrates the input handwriting samples alongside their ground truth labels, while Figure \ref{fig:prediction_logs} displays the corresponding model predictions and Character Error Rate (CER) metrics.
+ \begin{figure}[H] % [H] bắt buộc ảnh nằm CHÍNH XÁC tại chỗ này
+    \centering
+    \includegraphics[width=0.8\linewidth]{graphics/dataset.png} 
+    
+    \caption{Handwriting samples from the test dataset used for inference.} % Tên hiển thị dưới ảnh
+    \label{fig:input_samples} % Nhãn để trích dẫn chéo (cross-reference)
+\end{figure}
+
+\begin{figure}[H] % [H] bắt buộc ảnh nằm CHÍNH XÁC tại chỗ này
+    \centering
+    \includegraphics[width=1.0\linewidth]{graphics/prediction.jpg} 
+    
+    \caption{Inference logs showing Ground Truth vs. Prediction and calculated CER.} % Tên hiển thị dưới ảnh
+    \label{fig:prediction_logs} % Nhãn để trích dẫn chéo (cross-reference)
+\end{figure}
+
+
+\subsubsection{Success Cases}
+As observed in the inference logs, the model demonstrates high robustness in recognizing words with varying stroke widths and distinct character separations. Specifically, samples such as "The", "himself", "may", and "Tradition" achieved a perfect CER of 0.0. This indicates that the CNN backbone effectively extracts morphological features, and the Bi-LSTM network successfully models the sequence dependencies for standard cursive styles.
+
+\subsubsection{Error Analysis}
+Despite the low overall error rate, specific failure cases provide insight into the model's limitations:
+\begin{itemize}
+    \item \textbf{Case Sensitivity:} In the sample labeled "A", the model predicted "a", resulting in a CER of 1.0. This suggests that while the model recognized the character class, it struggled to distinguish between uppercase and lowercase variants when they lack context or height reference relative to other letters.
+    \item \textbf{Complex Cursive \& Ambiguity:} The sample "Gloucester" resulted in a prediction of "Alloucesses" (CER: 0.4). This error highlights the challenge of "inter-character ambiguity" in dense cursive handwriting. The visual similarity between the uppercase "G" and "A" in this specific writing style, combined with the connected strokes of "lou" and "ces", caused the CTC decoder to misalign the character probabilities.
+\end{itemize}
+
+Overall, the qualitative results confirm that the system performs reliably on legible handwriting but requires further data augmentation to handle extreme cursive variances and case-sensitive context.
+ 
+
+\section{Comparison}
+\begin{table}[htbp]
+\centering
+\footnotesize
+\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{|p{2.6cm}|p{3.5cm}|p{3.5cm}|p{3.5cm}|}
+\hline
+\textbf{Method} & \textbf{Description} & \textbf{Advantages} & \textbf{Disadvantages} \\
+\hline
+Hidden Markov Model (HMM)
+& A probabilistic model representing handwriting as a sequence of hidden states and observable features.
+& Models sequential data naturally; supports implicit segmentation; integrates language models.
+& Depends on handcrafted features; limited non-linear modeling; strong independence assumptions.
+\\
+\hline
+Support Vector Machine (SVM)
+& A discriminative classifier that constructs an optimal separating hyperplane using kernel functions.
+& Effective on small to medium datasets; good generalization; strong theoretical foundation.
+& Requires manual feature extraction; unsuitable for sequence modeling; poor scalability.
+\\
+\hline
+CNN--RNN--CTC
+& An end-to-end deep architecture combining CNNs, RNNs, and CTC loss for alignment-free training.
+& Automatic feature learning; handles variable-length sequences; state-of-the-art performance.
+& Requires large datasets; high computational cost; complex training process.
+\\
+\hline
+\end{tabular}
+\caption{Comparison of HMM, SVM, and CNN--RNN--CTC in Handwriting Recognition}
+\label{tab:model_comparison}
+\end{table}
+
+\newpage
+\section{Another approach}
+While a variety of traditional machine learning algorithms are applicable to feature-based handwriting recognition, the Support Vector Machine (SVM) emerges as the most robust candidate for this task. Among traditional classifiers discussed in the provided sources, SVM demonstrates strong and consistent performance when applied to handcrafted feature representations such as Histogram of Oriented Gradients (HOG). Experimental comparisons show that SVM achieves higher classification accuracy than methods such as K-Nearest Neighbors and basic neural models like Multi-layer Perceptrons, particularly in distinguishing visually similar characters. A major advantage of SVM lies in its mathematical formulation, as the training process is based on convex optimization, which guarantees convergence to a global optimum and avoids the local minima problem commonly observed in neural-based models. In addition, SVM offers effective control over overfitting through margin maximization and regularization, making it more robust than decision tree-based approaches, which tend to overfit as model complexity increases. Moreover, SVM is well suited for high-dimensional feature spaces and remains computationally efficient during inference due to its compact model representation. Overall, considering its stability, generalization ability, and effectiveness in feature-based classification, SVM represents the most suitable classic machine learning approach for handwriting recognition.
+
+\section{Conclusion}
+This research has successfully addressed the critical challenge of Handwriting Recognition in the context of digital transformation, particularly for high-demand sectors like banking and finance. Unlike traditional methods such as HMM or SVM which rely heavily on manual feature extraction and segmented inputs, this report proposed and implemented a robust \textbf{end-to-end Deep Learning architecture}.
+
+The core of our approach lies in the hybrid combination of \textbf{Convolutional Neural Networks (CNN)} and \textbf{Recurrent Neural Networks (RNN)}, optimized by the \textbf{Connectionist Temporal Classification (CTC)} loss function. Specifically, the integration of ResNet-based CNNs allowed for effective extraction of spatial features from raw images, while Bidirectional LSTMs captured the long-term dependencies within the character sequences. Crucially, the deployment of CTC loss eliminated the need for explicit character segmentation, enabling the system to learn alignments directly from unsegmented text lines.
+
+Experimental results validated the efficacy of this architecture, achieving a Character Error Rate (CER) of \textbf{0.1491} and a Word Error Rate (WER) of \textbf{0.3425} after 100 epochs. These metrics demonstrate that the CNN-RNN-CTC model significantly outperforms traditional approaches in handling the variability and sequence dependency of natural handwriting. Future work will focus on expanding the dataset to include multi-language support and optimizing the model's inference speed for real-time deployment on edge devices.
+
+\section{Source Code}
+\textbf{Repository:} \href{https://github.com/quocthangtrann/Handwriting_Recognition}{Source Code (GitHub)}
+\clearpage
+
+\bibliographystyle{plain}
+\bibliography{refs/example.bib}
+\nocite{*}
+
+\end{document}
